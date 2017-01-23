@@ -1,0 +1,114 @@
+<!doctype html>
+<html class="no-js" lang="">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <title></title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    </head>
+    <body>
+
+        <p id="muppet_count">Hello world!</p>
+
+        <div id="kermit-view">This is Kermit!</div>
+
+        <ul id="muppets-list"></ul>
+
+        <script src="https://code.jquery.com/jquery-latest.min.js"></script>
+        <script src="http://underscorejs.org/underscore-min.js"></script>
+        <script src="http://backbonejs.org/backbone.js"></script>
+
+
+<script type="text/template" id="muppet-item-tmpl">
+  <p><a href="/muppets/<%= id %>"><%= name %></a></p>
+  <p>Job: <i><%= occupation %></i></p>
+</script>
+
+<script>
+
+/******* MODELS  **************/
+
+var MuppetModel = Backbone.Model.extend({
+  defaults: {
+    id: null,
+    name: null,
+    occupation: null
+  }
+});
+
+var MuppetsCollection = Backbone.Collection.extend({
+  url: '/muppets',
+  model: MuppetModel,
+  parse: function(data) {
+    return data.muppets;
+  }
+});
+var muppets = new MuppetsCollection();
+// console.log(muppets.create({name: 'Piggy', occupation: 'fashionista'}));
+muppets.fetch().then(function() {
+    console.log(muppets.length);
+});
+
+var KermitModel = Backbone.Model.extend({
+  url: '/muppets/2',
+  defaults: {
+    id: null,
+    name: null,
+    occupation: null
+  }
+});
+
+var kermit = new KermitModel();
+
+
+
+
+/************ VIEWS ****************/
+
+var MuppetsListView = Backbone.View.extend({
+  el: '#muppets-list'
+});
+
+// Create a new view instance:
+var muppetsList = new MuppetsListView();
+
+// attach a view to a collection with a constructor arg
+var muppetsView = new MuppetsListView({collection: muppets});
+
+
+var KermitView = Backbone.View.extend({
+  el: '#kermit-view',
+
+  initialize: function() {
+    console.log("Initializing KermitView");
+    this.listenTo(this.model, 'sync change', this.render);
+    this.model.fetch();
+    this.render();
+  },
+
+    /*
+    A view defines a render method. This method generates HTML from its data source, and installs that
+    markup into the view's container element.
+
+    A view binds event listeners to its model. Any changes to the model should trigger the view to re-render.
+    */
+
+  tmpl: _.template($('#muppet-item-tmpl').html()),
+
+  render: function() {
+  console.log(this.model.toJSON());
+    this.$el.html(this.tmpl(this.model.toJSON()));
+    return this;
+  }
+});
+
+var kermit = new KermitModel();
+
+var kermitView = new KermitView({model: kermit});
+
+
+</script>
+    </body>
+</html>

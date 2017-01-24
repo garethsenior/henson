@@ -10,9 +10,16 @@
     </head>
     <body>
 
-        <p id="muppet_count">Hello world!</p>
+<div id="kermit-view">
+  <label>Name: <input type="text" name="name" class="name"></label>
+  <label>Occupation: <input type="text" name="occupation" class="occupation"></label>
+  <button class="save">Save</button>
+</div>
 
-        <div id="kermit-view">This is Kermit!</div>
+
+<div id="kermit-display">
+<p>Hmmm</p>
+</div>
 
         <ul id="muppets-list"></ul>
 
@@ -30,27 +37,6 @@
 
 /******* MODELS  **************/
 
-var MuppetModel = Backbone.Model.extend({
-  defaults: {
-    id: null,
-    name: null,
-    occupation: null
-  }
-});
-
-var MuppetsCollection = Backbone.Collection.extend({
-  url: '/muppets',
-  model: MuppetModel,
-  parse: function(data) {
-    return data.muppets;
-  }
-});
-var muppets = new MuppetsCollection();
-// console.log(muppets.create({name: 'Piggy', occupation: 'fashionista'}));
-muppets.fetch().then(function() {
-    console.log(muppets.length);
-});
-
 var KermitModel = Backbone.Model.extend({
   url: '/muppets/2',
   defaults: {
@@ -67,46 +53,58 @@ var kermit = new KermitModel();
 
 /************ VIEWS ****************/
 
-var MuppetsListView = Backbone.View.extend({
-  el: '#muppets-list'
-});
-
-// Create a new view instance:
-var muppetsList = new MuppetsListView();
-
-// attach a view to a collection with a constructor arg
-var muppetsView = new MuppetsListView({collection: muppets});
-
-
 var KermitView = Backbone.View.extend({
-  el: '#kermit-view',
+  el: '#kermit-display',
+  tmpl: _.template($("#muppet-item-tmpl").html()),
 
   initialize: function() {
-    console.log("Initializing KermitView");
     this.listenTo(this.model, 'sync change', this.render);
     this.model.fetch();
     this.render();
   },
 
-    /*
-    A view defines a render method. This method generates HTML from its data source, and installs that
-    markup into the view's container element.
-
-    A view binds event listeners to its model. Any changes to the model should trigger the view to re-render.
-    */
-
-  tmpl: _.template($('#muppet-item-tmpl').html()),
-
   render: function() {
-  console.log(this.model.toJSON());
-    this.$el.html(this.tmpl(this.model.toJSON()));
+    var html = this.tmpl(this.model.toJSON());
+    this.$el.html(html);
     return this;
+  }
+
+});
+
+
+var kermitView = new KermitView({ model: kermit});
+var KermitEditView = Backbone.View.extend({
+  el: '#kermit-view',
+
+  events: {
+    'change .name': 'onChangeName',
+    'change .occupation': 'onChangeOccupation',
+    'click .save': 'onSave'
+  },
+
+  initialize: function() {
+    var that = this;
+    this.model.fetch().then(function() {
+        $('.name').val(that.model.get('name'));
+        $('.occupation').val(that.model.get('occupation'));
+    });
+  },
+
+
+  onChangeName: function(evt) {
+    if (evt.currentTarget.value) this.model.set('name', evt.currentTarget.value);
+  },
+
+  onChangeOccupation: function(evt) {
+    if (evt.currentTarget.value) this.model.set('occupation', evt.currentTarget.value);
+  },
+
+  onSave: function(evt) {
+    this.model.save();
   }
 });
 
-var kermit = new KermitModel();
-
-var kermitView = new KermitView({model: kermit});
+var kermitEditView = new KermitEditView({model: kermit});
 
 
 </script>

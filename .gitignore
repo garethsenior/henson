@@ -1,4 +1,4 @@
 *.pyc
 venv
 .DC_Store
-db.sqlite3333
+db.sqlite3
